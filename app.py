@@ -70,32 +70,30 @@ def create_profile_chart(user_data):
         ax1 = fig.add_subplot(1, 2, 1, polar=True)
         num_vars = len(labels)
         
-        # Original angles and scores (we still need these for the spline)
-        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-        plot_scores = behavior_scores + behavior_scores[:1]
-        plot_angles = angles + angles[:1]
+        # Original angles (this is the strictly increasing sequence we need)
+        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
 
-        # --- NEW CURVED LINE LOGIC ---
-        # 1. Create a spline function. `CubicSpline` creates a smooth curve.
-        #    The `periodic=True` argument is perfect for closed shapes like a radar chart.
-        spline = CubicSpline(plot_angles, plot_scores, bc_type='periodic')
+        # --- CORRECTED CURVED LINE LOGIC ---
+        # 1. We create the spline using the ORIGINAL angles and scores, not the "closed loop" versions.
+        #    The `bc_type='periodic'` argument handles the cyclical nature for us.
+        spline = CubicSpline(angles, behavior_scores, bc_type='periodic')
 
-        # 2. Generate a larger number of smooth points for the new curve
+        # 2. Generate a larger number of smooth points for the new curve, covering the full 360 degrees.
         dense_angles = np.linspace(0, 2 * np.pi, 200)
         dense_scores = spline(dense_angles)
-        # --- END NEW LOGIC ---
+        # --- END CORRECTION ---
 
         # Configure the plot axes
         ax1.set_theta_offset(np.pi / 2)
         ax1.set_theta_direction(-1)
-        ax1.set_xticks(angles)
+        ax1.set_xticks(angles) # Use original angles for the tick labels
         ax1.set_xticklabels(labels, size=12)
         ax1.set_rlabel_position(0)
         ax1.set_yticks([2, 4, 6, 8, 10])
         ax1.set_yticklabels(["2", "4", "6", "8", "10"], color="grey", size=9)
         ax1.set_ylim(0, 10)
         
-        # Plot the NEW curved data instead of the old straight-line data
+        # Plot the NEW curved data
         ax1.plot(dense_angles, dense_scores, color='#1f77b4', linewidth=2, linestyle='solid')
         ax1.fill(dense_angles, dense_scores, color='#1f77b4', alpha=0.25)
         ax1.set_title("Behavioral Shape", size=14, pad=25)
@@ -105,12 +103,13 @@ def create_profile_chart(user_data):
         ax2.barh(alignment_labels, alignment_scores, color=colors)
         ax2.set_xlim(0, 10)
         ax2.set_title("Values Alignment", size=14, pad=20)
-        # ... (rest of the bar chart code is unchanged) ...
-        for index, value in enumerate(alignment_scores):
-            ax2.text(value + 0.2, index, str(value), color='black', fontweight='bold', va='center', size=12)
+        ax2.tick_params(axis='y', labelsize=12)
         ax2.spines['top'].set_visible(False)
         ax2.spines['right'].set_visible(False)
         ax2.spines['left'].set_visible(False)
+
+        for index, value in enumerate(alignment_scores):
+            ax2.text(value + 0.2, index, str(value), color='black', fontweight='bold', va='center', size=12)
         
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         return fig
