@@ -175,7 +175,7 @@ if df is not None:
                 st.pyplot(fig)
 
             # Add personalized insights based on user's scores
-            st.markdown("### 🎯 Your Personal Insights")
+            st.markdown("### Your Personal Insights")
             
             # Behavioral insights
             growth_score = user_data.get('Growth Drive Score', 0)
