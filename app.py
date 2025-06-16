@@ -3,6 +3,8 @@ import gspread
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.path as mpath
+import matplotlib.patches as mpatches
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Self-Reflection Profile")
@@ -28,13 +30,12 @@ def load_data():
         st.error(f"An error occurred loading data: {e}")
         return None
 
-# --- Main Visualization Function (NEW ARC METHOD) ---
+# --- Main Visualization Function (FINAL CONCAVE CURVE METHOD) ---
 def create_profile_chart(user_data):
     try:
         # --- You can adjust this value! ---
-        # This now controls the "depth" of the inward curve. 
-        # 0.0 is a straight line. Higher values create a deeper arc. 0.5 is a good start.
-        CURVATURE = 0.5 
+        # 0.0 is a straight line. 0.1 is a subtle curve. 0.2 is more pronounced.
+        CURVATURE = 0.1
 
         labels = ['Growth Drive', 'Initiative', 'Courage', 'Strategic\nGenerosity']
         behavior_scores = np.array([
@@ -68,40 +69,34 @@ def create_profile_chart(user_data):
         ax1.set_yticklabels(["2", "4", "6", "8", "10"], color="grey", size=9)
         ax1.set_ylim(0, 10)
         
-        # --- ARC DRAWING LOGIC ---
-        # Close the loop for scores and angles
+        # --- BEZIER CURVE DRAWING LOGIC ---
         scores_closed = np.concatenate((behavior_scores, [behavior_scores[0]]))
         angles_closed = np.concatenate((angles, [angles[0]]))
+        verts_cart = [(r * np.cos(theta), r * np.sin(theta)) for r, theta in zip(scores_closed, angles_closed)]
         
-        # This will store all the small points that make up the curves
-        final_angles = np.array([])
-        final_scores = np.array([])
+        Path = mpath.Path
+        path_codes = [Path.MOVETO]
+        path_verts = [verts_cart[0]]
 
-        for i in range(num_vars):
-            # Define start and end points for this segment
-            start_angle, end_angle = angles_closed[i], angles_closed[i+1]
-            start_score, end_score = scores_closed[i], scores_closed[i+1]
+        for i in range(len(scores_closed) - 1):
+            start_point = np.array(verts_cart[i])
+            end_point = np.array(verts_cart[i+1])
+            mid_point = (start_point + end_point) / 2
             
-            # Create 50 points between the start and end angles
-            segment_angles = np.linspace(start_angle, end_angle, 50)
+            # --- THE ONLY CHANGE IS HERE ---
+            # By PUSHING the control point AWAY from the center (multiplying by > 1),
+            # we create the desired CONCAVE (bowed-in) effect.
+            control_point = mid_point * (1 + CURVATURE) # Using '+' instead of '-'
             
-            # Create a linear interpolation for the radius (a straight line)
-            segment_scores_straight = np.linspace(start_score, end_score, 50)
-            
-            # Create a sine wave that is 0 at the start and end, and 1 in the middle
-            # This will be our "bow" effect
-            curve_effect = CURVATURE * np.sin(np.linspace(0, np.pi, 50))
-            
-            # Subtract the curve effect from the straight line to make it bow inward
-            segment_scores_curved = segment_scores_straight - curve_effect
-            
-            # Add these new points to our final lists
-            final_angles = np.concatenate((final_angles, segment_angles))
-            final_scores = np.concatenate((final_scores, segment_scores_curved))
+            path_codes.extend([Path.CURVE3, Path.CURVE3])
+            path_verts.extend([control_point, end_point])
 
-        # Plot the final curved shape
-        ax1.plot(final_angles, final_scores, color='#1f77b4', linewidth=2)
-        ax1.fill(final_angles, final_scores, color='#1f77b4', alpha=0.25)
+        path = Path(path_verts, path_codes)
+        patch_fill = mpatches.PathPatch(path, facecolor='#1f77b4', alpha=0.25)
+        patch_line = mpatches.PathPatch(path, facecolor='none', edgecolor='#1f77b4', linewidth=2)
+        
+        ax1.add_patch(patch_fill)
+        ax1.add_patch(patch_line)
         ax1.set_title("Behavioral Shape", size=14, pad=25)
 
         # --- Bar Chart (Unchanged) ---
