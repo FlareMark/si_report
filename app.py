@@ -123,6 +123,14 @@ if df is not None:
     email_column_name = "Work Email Address"
     name_column = "Name"
     
+    # Debug: Show available emails (you can remove this later)
+    with st.expander("🔍 Debug: Available Emails in Dataset", expanded=False):
+        available_emails = df[email_column_name].tolist()
+        st.write(f"Total responses: {len(available_emails)}")
+        st.write("Available emails:")
+        for email_addr in sorted(available_emails):
+            st.write(f"- {email_addr}")
+    
     query_params = st.query_params
     email_from_url = query_params.get("email", "")
 
@@ -290,7 +298,7 @@ if df is not None:
                 Your Strategic Impact Profile is a starting point for understanding and improving your workplace effectiveness, not a fixed assessment of your capabilities or worth.
                 """)
 
-        elif email and not email_from_url:
+        elif email:
              st.error("No profile found for that email address.")
 
 # --- Footer Section ---
