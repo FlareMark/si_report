@@ -123,14 +123,7 @@ if df is not None:
     email_column_name = "Work Email Address"
     name_column = "Name"
     
-    # Debug: Show available emails (you can remove this later)
-    with st.expander("🔍 Debug: Available Emails in Dataset", expanded=False):
-        available_emails = df[email_column_name].tolist()
-        st.write(f"Total responses: {len(available_emails)}")
-        st.write("Available emails:")
-        for email_addr in sorted(available_emails):
-            st.write(f"- {email_addr}")
-    
+
     query_params = st.query_params
     email_from_url = query_params.get("email", "")
 
@@ -140,15 +133,8 @@ if df is not None:
     )
 
     if email:
-        # Debug: Show lookup process
         normalized_email = email.strip().lower()
-        st.write(f"🔍 Looking for: '{normalized_email}'")
-        
         user_row = df[df[email_column_name] == normalized_email]
-        
-        st.write(f"🔍 Rows found: {len(user_row)}")
-        if not user_row.empty:
-            st.write(f"🔍 Match found! Row index: {user_row.index[0]}")
 
         if not user_row.empty:
             user_data = user_row.iloc[0].to_dict()
