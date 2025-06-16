@@ -44,23 +44,33 @@ else:
 @st.cache_data(ttl=600)
 def load_data():
     try:
+        # Build credentials directly from secrets
         creds = Credentials.from_authorized_user_info({
             "refresh_token": st.secrets.web.refresh_token,
             "token_uri": st.secrets.web.token_uri,
             "client_id": st.secrets.web.client_id,
             "client_secret": st.secrets.web.client_secret,
         })
+        
         client = gspread.authorize(creds)
-        spreadsheet = client.open("Strategic Impact Assessment Responses (5)")
+        
+        # --- THE FIX IS HERE ---
+        # Using the correct spreadsheet name you provided
+        spreadsheet = client.open("Strategic Impact Assessment Responses")
+        
         worksheet = spreadsheet.worksheet("Form Responses 1")
+        
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
+        
         if 'Email Address' in df.columns:
             df['Email Address'] = df['Email Address'].str.strip().str.lower()
         else:
             st.error("Sheet must have an 'Email Address' column.")
             st.stop()
+            
         return df
+        
     except Exception as e:
         st.error(f"Error connecting to Google Sheets: {e}")
         return None
