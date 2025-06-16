@@ -3,8 +3,6 @@ import gspread
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.path as mpath
-import matplotlib.patches as mpatches
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Self-Reflection Profile")
@@ -30,20 +28,16 @@ def load_data():
         st.error(f"An error occurred loading data: {e}")
         return None
 
-# --- Main Visualization Function (FINAL CONCAVE CURVE METHOD) ---
+# --- Main Visualization Function (Standard Radar Chart) ---
 def create_profile_chart(user_data):
     try:
-        # --- You can adjust this value! ---
-        # 0.0 is a straight line. 0.1 is a subtle curve. 0.2 is more pronounced.
-        CURVATURE = 0.1
-
         labels = ['Growth Drive', 'Initiative', 'Courage', 'Strategic\nGenerosity']
-        behavior_scores = np.array([
+        behavior_scores = [
             user_data['Growth Drive Score'], 
             user_data['Initiative Score'], 
             user_data['Courage Score'], 
             user_data['Strategic Generosity Score']
-        ])
+        ]
         
         alignment_labels = ['Mission', 'Values', 'Culture', 'Benefits']
         alignment_scores = [
@@ -57,7 +51,11 @@ def create_profile_chart(user_data):
         fig = plt.figure(figsize=(14, 7))
         ax1 = fig.add_subplot(1, 2, 1, polar=True)
         num_vars = len(labels)
-        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
+        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+
+        # "Close the loop" for the plot
+        plot_scores = behavior_scores + behavior_scores[:1]
+        plot_angles = angles + angles[:1]
 
         # Configure the plot axes
         ax1.set_theta_offset(np.pi / 2)
@@ -69,34 +67,10 @@ def create_profile_chart(user_data):
         ax1.set_yticklabels(["2", "4", "6", "8", "10"], color="grey", size=9)
         ax1.set_ylim(0, 10)
         
-        # --- BEZIER CURVE DRAWING LOGIC ---
-        scores_closed = np.concatenate((behavior_scores, [behavior_scores[0]]))
-        angles_closed = np.concatenate((angles, [angles[0]]))
-        verts_cart = [(r * np.cos(theta), r * np.sin(theta)) for r, theta in zip(scores_closed, angles_closed)]
-        
-        Path = mpath.Path
-        path_codes = [Path.MOVETO]
-        path_verts = [verts_cart[0]]
-
-        for i in range(len(scores_closed) - 1):
-            start_point = np.array(verts_cart[i])
-            end_point = np.array(verts_cart[i+1])
-            mid_point = (start_point + end_point) / 2
-            
-            # --- THE ONLY CHANGE IS HERE ---
-            # By PUSHING the control point AWAY from the center (multiplying by > 1),
-            # we create the desired CONCAVE (bowed-in) effect.
-            control_point = mid_point * (1 + CURVATURE) # Using '+' instead of '-'
-            
-            path_codes.extend([Path.CURVE3, Path.CURVE3])
-            path_verts.extend([control_point, end_point])
-
-        path = Path(path_verts, path_codes)
-        patch_fill = mpatches.PathPatch(path, facecolor='#1f77b4', alpha=0.25)
-        patch_line = mpatches.PathPatch(path, facecolor='none', edgecolor='#1f77b4', linewidth=2)
-        
-        ax1.add_patch(patch_fill)
-        ax1.add_patch(patch_line)
+        # --- STANDARD PLOTTING LOGIC ---
+        # Draw the straight-line plot and fill the area
+        ax1.plot(plot_angles, plot_scores, color='#1f77b4', linewidth=2, linestyle='solid')
+        ax1.fill(plot_angles, plot_scores, color='#1f77b4', alpha=0.25)
         ax1.set_title("Behavioral Shape", size=14, pad=25)
 
         # --- Bar Chart (Unchanged) ---
