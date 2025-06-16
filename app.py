@@ -140,7 +140,15 @@ if df is not None:
     )
 
     if email:
-        user_row = df[df[email_column_name] == email.strip().lower()]
+        # Debug: Show lookup process
+        normalized_email = email.strip().lower()
+        st.write(f"🔍 Looking for: '{normalized_email}'")
+        
+        user_row = df[df[email_column_name] == normalized_email]
+        
+        st.write(f"🔍 Rows found: {len(user_row)}")
+        if not user_row.empty:
+            st.write(f"🔍 Match found! Row index: {user_row.index[0]}")
 
         if not user_row.empty:
             user_data = user_row.iloc[0].to_dict()
