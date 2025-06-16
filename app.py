@@ -100,23 +100,39 @@ def create_profile_chart(user_data):
         return None
 
 
-# --- Web App Interface (Unchanged) ---
+# --- Web App Interface (Updated to handle URL parameters) ---
 st.title("Your Personal Self-Reflection Profile")
+
 df = load_data()
+
 if df is not None:
     email_column_name = "Work Email Address"
-    name_column = "Name" 
-    email = st.text_input("Please enter your work email address to load your profile:")
+    name_column = "Name"
+    
+    # Check for an email in the URL query parameters
+    query_params = st.query_params
+    email_from_url = query_params.get("email", "")
+
+    # Pre-fill the text input with the email from the URL
+    email = st.text_input(
+        "Please enter your work email address to load your profile:",
+        value=email_from_url
+    )
+
     if email:
         user_row = df[df[email_column_name] == email.strip().lower()]
+
         if not user_row.empty:
             user_data = user_row.iloc[0].to_dict()
+            
             if name_column in user_data:
                 st.header(f"Displaying Profile for: {user_data[name_column]}")
+
             fig = create_profile_chart(user_data)
             if fig is not None:
                 st.pyplot(fig)
+
             with st.expander("How to Interpret Your Profile"):
-                st.markdown("""...""") # Explanatory text
-        elif email: 
+                st.markdown("""...""") # Your explanatory text here
+        elif email and not email_from_url: # Only show error if user typed a new, bad email
              st.error("No profile found for that email address.")
