@@ -5,7 +5,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # --- Page Configuration ---
-st.set_page_config(layout="wide", page_title="Self-Reflection Profile")
+st.set_page_config(
+    layout="wide", 
+    page_title="Self-Reflection Profile",
+    initial_sidebar_state="collapsed"
+)
+
+# --- PRIVACY & SECURITY META TAGS ---
+# Critical: Prevent search engines and AI from indexing private profile content
+st.markdown("""
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex, nocache">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="slurp" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="duckduckbot" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="facebookexternalhit" content="noindex, nofollow">
+<meta name="twitterbot" content="noindex, nofollow">
+<meta name="linkedinbot" content="noindex, nofollow">
+<meta name="applebot" content="noindex, nofollow">
+<meta name="yandexbot" content="noindex, nofollow">
+<meta name="baiduspider" content="noindex, nofollow">
+<meta name="ia_archiver" content="noindex, nofollow">
+<meta name="archive.org_bot" content="noindex, nofollow">
+<meta name="CCBot" content="noindex, nofollow">
+<meta name="ChatGPT-User" content="noindex, nofollow">
+<meta name="anthropic-ai" content="noindex, nofollow">
+<meta name="Claude-Web" content="noindex, nofollow">
+<meta name="GPTBot" content="noindex, nofollow">
+<meta name="PerplexityBot" content="noindex, nofollow">
+<meta name="YouBot" content="noindex, nofollow">
+""", unsafe_allow_html=True)
 
 # --- CUSTOM CSS INJECTION ---
 # This CSS overrides the default Streamlit theme to remove rounded corners from images.
