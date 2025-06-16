@@ -123,13 +123,6 @@ if df is not None:
     email_column_name = "Work Email Address"
     name_column = "Name"
     
-    # Add refresh button for users who just submitted
-    col1, col2 = st.columns([3, 1])
-    with col2:
-        if st.button("🔄 Refresh Data", help="Click if you just submitted the assessment"):
-            st.cache_data.clear()
-            st.rerun()
-
     query_params = st.query_params
     email_from_url = query_params.get("email", "")
 
@@ -300,6 +293,14 @@ if df is not None:
 
         elif email:
              st.error("No profile found for that email address.")
+             
+             # Show refresh button only when no profile is found
+             st.markdown("---")
+             col1, col2, col3 = st.columns([1, 1, 1])
+             with col2:
+                 if st.button("🔄 Refresh Data", help="Click if you just submitted the assessment"):
+                     st.cache_data.clear()
+                     st.rerun()
 
 # --- Footer Section ---
 st.divider()
