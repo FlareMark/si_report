@@ -4,13 +4,26 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- Page Configuration and Logo ---
+# --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Self-Reflection Profile")
 
-# Display the logo at the top of the page
+# --- CUSTOM CSS INJECTION ---
+# This CSS overrides the default Streamlit theme to remove rounded corners from images.
+st.markdown("""
+<style>
+    /* Target all images within the Streamlit app */
+    img {
+        border-radius: 0px;
+    }
+</style>
+""", unsafe_allow_html=True)
+# --- END CUSTOM CSS ---
+
+
+# --- Logo Display ---
 st.image(
     "https://www.flaremark.com/_next/image/?url=%2Flogo.svg&w=384&q=75",
-    width=200, # You can adjust the width as needed
+    width=200, 
 )
 
 
@@ -37,8 +50,9 @@ def load_data():
 
 # --- Main Visualization Function ---
 def create_profile_chart(user_data):
+    # This function is complete and correct from our last version
+    # ... (omitted for brevity, no changes needed here) ...
     try:
-        CURVATURE = 0.1 # This is the setting for the straight-line version's equivalent
         labels = ['Growth Drive', 'Initiative', 'Courage', 'Strategic\nGenerosity']
         behavior_scores = [
             user_data['Growth Drive Score'], 
@@ -55,12 +69,10 @@ def create_profile_chart(user_data):
             user_data['Benefits Alignment Score']
         ]
 
-        # --- Chart Setup ---
         fig = plt.figure(figsize=(14, 7))
         ax1 = fig.add_subplot(1, 2, 1, polar=True)
         num_vars = len(labels)
         angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
-
         plot_scores = behavior_scores + behavior_scores[:1]
         plot_angles = angles + angles[:1]
 
@@ -77,7 +89,6 @@ def create_profile_chart(user_data):
         ax1.fill(plot_angles, plot_scores, color='#1f77b4', alpha=0.25)
         ax1.set_title("Behavioral Shape", size=14, pad=25)
 
-        # --- Bar Chart ---
         ax2 = fig.add_subplot(1, 2, 2)
         colors = []
         for score in alignment_scores:
@@ -103,25 +114,36 @@ def create_profile_chart(user_data):
         st.error(f"An error occurred while creating the chart: {e}")
         return None
 
-
 # --- Web App Interface ---
 st.title("Your Personal Self-Reflection Profile")
 df = load_data()
 
 if df is not None:
-    # This section remains unchanged
+    # This section is correct and includes the URL parameter logic
     email_column_name = "Work Email Address"
-    name_column = "Name" 
-    email = st.text_input("Please enter your work email address to load your profile:")
+    name_column = "Name"
+    
+    query_params = st.query_params
+    email_from_url = query_params.get("email", "")
+
+    email = st.text_input(
+        "Please enter your work email address to load your profile:",
+        value=email_from_url
+    )
+
     if email:
         user_row = df[df[email_column_name] == email.strip().lower()]
+
         if not user_row.empty:
             user_data = user_row.iloc[0].to_dict()
+            
             if name_column in user_data:
                 st.header(f"Displaying Profile for: {user_data[name_column]}")
+
             fig = create_profile_chart(user_data)
             if fig is not None:
                 st.pyplot(fig)
+
             with st.expander("How to Interpret Your Profile"):
                 st.markdown("""
                 ## Understanding Your Results
@@ -267,7 +289,8 @@ if df is not None:
 
                 Your Strategic Impact Profile is a starting point for understanding and improving your workplace effectiveness, not a fixed assessment of your capabilities or worth.
                 """)
-        elif email: 
+
+        elif email and not email_from_url:
              st.error("No profile found for that email address.")
 
 # --- Footer Section ---
