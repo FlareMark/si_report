@@ -145,6 +145,83 @@ if df is not None:
             if fig is not None:
                 st.pyplot(fig)
 
+            # Add personalized insights based on user's scores
+            st.markdown("### 🎯 Your Personal Insights")
+            
+            # Behavioral insights
+            growth_score = user_data.get('Growth Drive Score', 0)
+            initiative_score = user_data.get('Initiative Score', 0)
+            courage_score = user_data.get('Courage Score', 0)
+            generosity_score = user_data.get('Strategic Generosity Score', 0)
+            
+            # Values alignment insights
+            mission_score = user_data.get('Mission Alignment Score', 0)
+            values_score = user_data.get('Values Alignment Score', 0)
+            culture_score = user_data.get('Culture Alignment Score', 0)
+            benefits_score = user_data.get('Benefits Alignment Score', 0)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Behavioral Strengths:**")
+                if growth_score >= 7:
+                    st.success("**Growth Drive**: You embrace challenges as development opportunities!")
+                if initiative_score >= 7:
+                    st.success("**Initiative**: You naturally expand your role to create impact!")
+                if courage_score >= 7:
+                    st.success("**Courage**: You thrive in uncertain, ambiguous situations!")
+                if generosity_score >= 7:
+                    st.success("**Strategic Generosity**: You prioritize collective success!")
+                    
+                # Show development areas if any scores are moderate/low
+                if any(score < 7 for score in [growth_score, initiative_score, courage_score, generosity_score]):
+                    st.markdown("**Development Focus Areas:**")
+                    if growth_score < 7:
+                        st.info("**Growth Drive**: Consider seeking more challenging assignments")
+                    if initiative_score < 7:
+                        st.info("**Initiative**: Look for opportunities to propose solutions proactively")
+                    if courage_score < 7:
+                        st.info("**Courage**: Practice making decisions with incomplete information")
+                    if generosity_score < 7:
+                        st.info("**Strategic Generosity**: Explore ways to support team goals")
+            
+            with col2:
+                st.markdown("**Values Alignment:**")
+                if mission_score >= 7:
+                    st.success("**Mission**: You're deeply connected to organizational purpose!")
+                if values_score >= 7:
+                    st.success("**Values**: Strong alignment between personal and organizational principles!")
+                if culture_score >= 7:
+                    st.success("**Culture**: You feel genuine belonging and psychological safety!")
+                if benefits_score >= 7:
+                    st.success("**Benefits**: Satisfied with compensation and development opportunities!")
+                    
+                # Show alignment concerns if any scores are low
+                if any(score < 7 for score in [mission_score, values_score, culture_score, benefits_score]):
+                    st.markdown("**Alignment Opportunities:**")
+                    if mission_score < 7:
+                        st.warning("**Mission**: Consider discussing organizational purpose with your manager")
+                    if values_score < 7:
+                        st.warning("**Values**: Explore ways to bring more authenticity to your work")
+                    if culture_score < 7:
+                        st.warning("**Culture**: Seek opportunities to build stronger connections")
+                    if benefits_score < 7:
+                        st.warning("**Benefits**: This may be worth discussing in your next review")
+            
+            # Overall pattern insight
+            st.markdown("---")
+            behavioral_avg = (growth_score + initiative_score + courage_score + generosity_score) / 4
+            alignment_avg = (mission_score + values_score + culture_score + benefits_score) / 4
+            
+            if behavioral_avg >= 7 and alignment_avg >= 7:
+                st.success("**Peak Performance Zone**: You have both high capability and strong organizational connection!")
+            elif behavioral_avg >= 7 and alignment_avg < 7:
+                st.warning("**High Performer, Lower Alignment**: You're capable but may want to address organizational fit")
+            elif behavioral_avg < 7 and alignment_avg >= 7:
+                st.info("**High Potential**: Strong alignment suggests focused development could unlock significant growth")
+            else:
+                st.error("**Multiple Focus Areas**: Consider both skill development and organizational alignment conversations")
+
             with st.expander("How to Interpret Your Profile"):
                 st.markdown("""
                 ## Understanding Your Results
@@ -165,7 +242,7 @@ if df is not None:
                 - **4-6 (Moderate):** You're open to growth in some areas but may prefer proven approaches in others. You balance learning opportunities with maintaining your current strengths.
                 - **0-3 (Lower):** You tend to favor established methods and may be cautious about taking on unfamiliar challenges. You prefer working within your established expertise areas.
 
-                💡 **Development Insight:** Higher Growth Drive correlates with career advancement and adaptability to organizational change.
+                **Development Insight:** Higher Growth Drive correlates with career advancement and adaptability to organizational change.
 
                 ### Initiative (0-10 scale)
                 **What it measures:** Your tendency to proactively identify and act on opportunities without external direction.
@@ -175,7 +252,7 @@ if df is not None:
                 - **4-6 (Moderate):** You take initiative in familiar areas but may wait for direction in ambiguous situations. You balance proactive action with appropriate consultation.
                 - **0-3 (Lower):** You prefer clear direction and defined responsibilities. You execute assigned tasks well but may not venture beyond explicit expectations.
 
-                💡 **Development Insight:** Higher Initiative predicts leadership emergence and project success rates.
+                **Development Insight:** Higher Initiative predicts leadership emergence and project success rates.
 
                 ### Courage Under Uncertainty (0-10 scale)
                 **What it measures:** Your willingness to act and make decisions when outcomes are unclear or information is incomplete.
@@ -185,7 +262,7 @@ if df is not None:
                 - **4-6 (Moderate):** You can handle some ambiguity but prefer gathering additional information when possible. You balance calculated risk-taking with thorough analysis.
                 - **0-3 (Lower):** You prefer clear parameters and well-defined outcomes. You gather extensive information before making decisions and favor proven approaches.
 
-                💡 **Development Insight:** Higher Courage Under Uncertainty enables innovation and strategic thinking in complex environments.
+                **Development Insight:** Higher Courage Under Uncertainty enables innovation and strategic thinking in complex environments.
 
                 ### Strategic Generosity (0-10 scale)
                 **What it measures:** Your inclination to share knowledge, resources, and effort to enhance collective organizational success.
@@ -195,7 +272,7 @@ if df is not None:
                 - **4-6 (Moderate):** You collaborate when asked and share knowledge appropriately. You balance individual productivity with team support.
                 - **0-3 (Lower):** You focus primarily on your individual domain and responsibilities. You maintain clear boundaries and prefer working independently.
 
-                💡 **Development Insight:** Higher Strategic Generosity correlates with team performance and cross-functional collaboration effectiveness.
+                **Development Insight:** Higher Strategic Generosity correlates with team performance and cross-functional collaboration effectiveness.
 
                 ---
 
@@ -237,23 +314,23 @@ if df is not None:
 
                 The most powerful insights come from understanding how your Behavioral Shape and Values Alignment interact:
 
-                ### 🎯 High Behavioral Scores + High Values Alignment
+                ### High Behavioral Scores + High Values Alignment
                 **Pattern:** Peak Performance Zone  
                 **Insight:** You have both the capability and motivation to excel. You're likely a high performer and potential mentor for others.
 
-                ### ⚠️ High Behavioral Scores + Low Values Alignment  
+                ### High Behavioral Scores + Low Values Alignment  
                 **Pattern:** Flight Risk  
                 **Insight:** You're capable but disconnected. You may be performing well despite misalignment, but you're vulnerable to leaving for better-aligned opportunities.
 
-                ### 📈 Low Behavioral Scores + High Values Alignment
+                ### Low Behavioral Scores + High Values Alignment
                 **Pattern:** Development Opportunity  
                 **Insight:** You want to contribute but may lack confidence, skills, or role clarity. This is often solvable through targeted development and clearer expectations.
 
-                ### 🔴 Low Behavioral Scores + Low Values Alignment
+                ### Low Behavioral Scores + Low Values Alignment
                 **Pattern:** Fundamental Mismatch  
                 **Insight:** Both capability expression and organizational connection are limited. This suggests either a wrong-role fit or systemic organizational issues.
 
-                ### 🎨 Mixed Patterns
+                ### Mixed Patterns
                 **Pattern:** Specific Focus Areas  
                 **Insight:** Examine which specific dimensions are high vs. low to identify targeted development opportunities.
 
@@ -278,7 +355,7 @@ if df is not None:
 
                 ---
 
-                ## ⚠️ Important Notes
+                ## Important Notes
 
                 - **Scores Are Not Judgments:** Lower scores don't indicate personal deficiencies—they reflect current patterns that can change with different circumstances, development, or role fit.
 
