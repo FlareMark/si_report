@@ -41,36 +41,40 @@ else:
 
 
 # --- 2. AUTHENTICATION AND DATA LOADING ---
+# FINAL app.py - load_data() function with column debugging
+
 @st.cache_data(ttl=600)
 def load_data():
     try:
-        # Build credentials directly from secrets
         creds = Credentials.from_authorized_user_info({
             "refresh_token": st.secrets.web.refresh_token,
             "token_uri": st.secrets.web.token_uri,
             "client_id": st.secrets.web.client_id,
             "client_secret": st.secrets.web.client_secret,
         })
-        
+
         client = gspread.authorize(creds)
-        
-        # --- THE FIX IS HERE ---
-        # Using the correct spreadsheet name you provided
         spreadsheet = client.open("Strategic Impact Assessment Responses")
-        
         worksheet = spreadsheet.worksheet("Form Responses 1")
-        
+
         data = worksheet.get_all_records()
         df = pd.DataFrame(data)
-        
+
+        # --- DEBUGGING LINE ---
+        # This will print the list of columns found in your sheet.
+        st.info("For debugging, here are the exact column names found in your sheet:")
+        st.write(df.columns.tolist())
+        # --- END DEBUGGING ---
+
+        # This is the line causing the error. Update "Email Address" to match your actual column name.
         if 'Email Address' in df.columns:
             df['Email Address'] = df['Email Address'].str.strip().str.lower()
         else:
-            st.error("Sheet must have an 'Email Address' column.")
+            st.error("Sheet must have an 'Email Address' column. See the list above and update the code.")
             st.stop()
-            
+
         return df
-        
+
     except Exception as e:
         st.error(f"Error connecting to Google Sheets: {e}")
         return None
