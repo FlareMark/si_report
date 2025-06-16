@@ -3,8 +3,6 @@ import gspread
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.path as mpath
-import matplotlib.patches as mpatches
 
 # --- Page Configuration ---
 st.set_page_config(layout="wide", page_title="Self-Reflection Profile")
@@ -30,20 +28,21 @@ def load_data():
         st.error(f"An error occurred loading data: {e}")
         return None
 
-# --- Main Visualization Function (NEW BEZIER CURVE METHOD) ---
+# --- Main Visualization Function (NEW ARC METHOD) ---
 def create_profile_chart(user_data):
     try:
         # --- You can adjust this value! ---
-        # 0.0 is a straight line, 0.5 is a very deep curve. 0.2 is a good start.
-        CURVATURE = 0.2
+        # This now controls the "depth" of the inward curve. 
+        # 0.0 is a straight line. Higher values create a deeper arc. 0.5 is a good start.
+        CURVATURE = 0.5 
 
         labels = ['Growth Drive', 'Initiative', 'Courage', 'Strategic\nGenerosity']
-        behavior_scores = [
+        behavior_scores = np.array([
             user_data['Growth Drive Score'], 
             user_data['Initiative Score'], 
             user_data['Courage Score'], 
             user_data['Strategic Generosity Score']
-        ]
+        ])
         
         alignment_labels = ['Mission', 'Values', 'Culture', 'Benefits']
         alignment_scores = [
@@ -56,7 +55,6 @@ def create_profile_chart(user_data):
         # --- Chart Setup ---
         fig = plt.figure(figsize=(14, 7))
         ax1 = fig.add_subplot(1, 2, 1, polar=True)
-        ax1.set_facecolor('white') # Explicitly set background
         num_vars = len(labels)
         angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False)
 
@@ -69,46 +67,45 @@ def create_profile_chart(user_data):
         ax1.set_yticks([2, 4, 6, 8, 10])
         ax1.set_yticklabels(["2", "4", "6", "8", "10"], color="grey", size=9)
         ax1.set_ylim(0, 10)
-        ax1.grid(color='lightgray', linestyle='-')
-        ax1.spines['polar'].set_visible(False) # Hide outer spine
-
-        # --- BEZIER CURVE DRAWING LOGIC ---
-        # Close the loop for scores
-        scores_closed = behavior_scores + behavior_scores[:1]
-        angles_closed = np.concatenate((angles, [angles[0]]))
-
-        # Convert polar coordinates to Cartesian for path drawing
-        verts_cart = [(r * np.cos(theta), r * np.sin(theta)) for r, theta in zip(scores_closed, angles_closed)]
         
-        Path = mpath.Path
-        path_codes = [Path.MOVETO]
-        path_verts = [verts_cart[0]]
+        # --- ARC DRAWING LOGIC ---
+        # Close the loop for scores and angles
+        scores_closed = np.concatenate((behavior_scores, [behavior_scores[0]]))
+        angles_closed = np.concatenate((angles, [angles[0]]))
+        
+        # This will store all the small points that make up the curves
+        final_angles = np.array([])
+        final_scores = np.array([])
 
-        for i in range(len(scores_closed) - 1):
-            p_start = np.array(verts_cart[i])
-            p_end = np.array(verts_cart[i+1])
+        for i in range(num_vars):
+            # Define start and end points for this segment
+            start_angle, end_angle = angles_closed[i], angles_closed[i+1]
+            start_score, end_score = scores_closed[i], scores_closed[i+1]
             
-            # Calculate the control point to bend the curve inwards
-            vec = p_end - p_start
-            mid_point = p_start + vec / 2
-            # The control point is the midpoint shifted towards the center
-            control_point = mid_point * (1 - CURVATURE)
+            # Create 50 points between the start and end angles
+            segment_angles = np.linspace(start_angle, end_angle, 50)
+            
+            # Create a linear interpolation for the radius (a straight line)
+            segment_scores_straight = np.linspace(start_score, end_score, 50)
+            
+            # Create a sine wave that is 0 at the start and end, and 1 in the middle
+            # This will be our "bow" effect
+            curve_effect = CURVATURE * np.sin(np.linspace(0, np.pi, 50))
+            
+            # Subtract the curve effect from the straight line to make it bow inward
+            segment_scores_curved = segment_scores_straight - curve_effect
+            
+            # Add these new points to our final lists
+            final_angles = np.concatenate((final_angles, segment_angles))
+            final_scores = np.concatenate((final_scores, segment_scores_curved))
 
-            path_codes.extend([Path.CURVE3, Path.CURVE3])
-            path_verts.extend([control_point, p_end])
-
-        # Create the patch and add it to the plot
-        path = Path(path_verts, path_codes)
-        patch_fill = mpatches.PathPatch(path, facecolor='#1f77b4', alpha=0.25)
-        patch_line = mpatches.PathPatch(path, facecolor='none', edgecolor='#1f77b4', linewidth=2)
-        ax1.add_patch(patch_fill)
-        ax1.add_patch(patch_line)
-
+        # Plot the final curved shape
+        ax1.plot(final_angles, final_scores, color='#1f77b4', linewidth=2)
+        ax1.fill(final_angles, final_scores, color='#1f77b4', alpha=0.25)
         ax1.set_title("Behavioral Shape", size=14, pad=25)
 
         # --- Bar Chart (Unchanged) ---
         ax2 = fig.add_subplot(1, 2, 2)
-        # ... (rest of bar chart code is unchanged) ...
         colors = []
         for score in alignment_scores:
             if score <= 4: colors.append('#d62728')
@@ -138,7 +135,6 @@ def create_profile_chart(user_data):
 st.title("Your Personal Self-Reflection Profile")
 df = load_data()
 if df is not None:
-    # ... (rest of web app code is unchanged) ...
     email_column_name = "Work Email Address"
     name_column = "Name" 
     email = st.text_input("Please enter your work email address to load your profile:")
@@ -152,6 +148,6 @@ if df is not None:
             if fig is not None:
                 st.pyplot(fig)
             with st.expander("How to Interpret Your Profile"):
-                st.markdown("...") # Explanatory text
+                st.markdown("""...""") # Explanatory text
         elif email: 
              st.error("No profile found for that email address.")
