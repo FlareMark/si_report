@@ -4,3 +4,4 @@ pandas
 matplotlib
 gspread-pandas
 google-auth-oauthlib
+scipy
